@@ -7,13 +7,14 @@ import org.example.taskmanager.exception.TaskNotFoundException;
 import org.example.taskmanager.model.Task;
 import org.example.taskmanager.model.TaskStatus;
 import org.example.taskmanager.repository.TaskRepository;
-import org.example.taskmanager.util.TaskMapper;
+import org.example.taskmanager.mapper.TaskMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockedStatic;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,9 +29,6 @@ class TaskServiceImplTest {
 
     @Mock
     private TaskRepository taskRepository;
-
-    @Mock
-    private TaskMapper taskMapper;
 
     @InjectMocks
     private TaskServiceImpl taskService;
@@ -79,31 +77,36 @@ class TaskServiceImplTest {
         // Arrange
         List<Task> tasks = List.of(task);
         when(taskRepository.findAll()).thenReturn(tasks);
-        when(taskMapper.toDto(any(Task.class))).thenReturn(taskDto);
 
-        // Act
-        List<TaskDto> result = taskService.getAllTasks();
+        try (MockedStatic<TaskMapper> mockedMapper = mockStatic(TaskMapper.class)) {
+            mockedMapper.when(() -> TaskMapper.toDto(any(Task.class))).thenReturn(taskDto);
 
-        // Assert
-        assertEquals(1, result.size());
-        assertEquals(taskDto, result.getFirst());
-        verify(taskRepository).findAll();
-        verify(taskMapper).toDto(task);
+            // Act
+            List<TaskDto> result = taskService.getAllTasks();
+
+            // Assert
+            assertEquals(1, result.size());
+            assertEquals(taskDto, result.getFirst());
+            verify(taskRepository).findAll();
+            mockedMapper.verify(() -> TaskMapper.toDto(task));
+        }
     }
 
     @Test
     void getTaskById_WhenTaskExists_ShouldReturnTask() {
         // Arrange
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(taskMapper.toDto(task)).thenReturn(taskDto);
+        try (MockedStatic<TaskMapper> mockedMapper = mockStatic(TaskMapper.class)) {
+            mockedMapper.when(() -> TaskMapper.toDto(task)).thenReturn(taskDto);
 
-        // Act
-        TaskDto result = taskService.getTaskById(1L);
+            // Act
+            TaskDto result = taskService.getTaskById(1L);
 
-        // Assert
-        assertEquals(taskDto, result);
-        verify(taskRepository).findById(1L);
-        verify(taskMapper).toDto(task);
+            // Assert
+            assertEquals(taskDto, result);
+            verify(taskRepository).findById(1L);
+            mockedMapper.verify(() -> TaskMapper.toDto(task));
+        }
     }
 
     @Test
@@ -122,18 +125,20 @@ class TaskServiceImplTest {
         Task newTask = new Task();
         newTask.setTitle("New Task");
 
-        when(taskMapper.toEntity(createRequest)).thenReturn(newTask);
-        when(taskRepository.save(any(Task.class))).thenReturn(task);
-        when(taskMapper.toDto(task)).thenReturn(taskDto);
+        try (MockedStatic<TaskMapper> mockedMapper = mockStatic(TaskMapper.class)) {
+            mockedMapper.when(() -> TaskMapper.toEntity(createRequest)).thenReturn(newTask);
+            when(taskRepository.save(any(Task.class))).thenReturn(task);
+            mockedMapper.when(() -> TaskMapper.toDto(task)).thenReturn(taskDto);
 
-        // Act
-        TaskDto result = taskService.createTask(createRequest);
+            // Act
+            TaskDto result = taskService.createTask(createRequest);
 
-        // Assert
-        assertEquals(taskDto, result);
-        verify(taskMapper).toEntity(createRequest);
-        verify(taskRepository).save(any(Task.class));
-        verify(taskMapper).toDto(task);
+            // Assert
+            assertEquals(taskDto, result);
+            mockedMapper.verify(() -> TaskMapper.toEntity(createRequest));
+            verify(taskRepository).save(any(Task.class));
+            mockedMapper.verify(() -> TaskMapper.toDto(task));
+        }
     }
 
     @Test
@@ -141,22 +146,25 @@ class TaskServiceImplTest {
         // Arrange
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(taskRepository.save(any(Task.class))).thenReturn(task);
-        when(taskMapper.toDto(task)).thenReturn(taskDto);
 
-        // Act
-        TaskDto result = taskService.updateTask(1L, updateRequest);
+        try (MockedStatic<TaskMapper> mockedMapper = mockStatic(TaskMapper.class)) {
+            mockedMapper.when(() -> TaskMapper.toDto(task)).thenReturn(taskDto);
 
-        // Assert
-        assertEquals(taskDto, result);
-        verify(taskRepository).findById(1L);
-        verify(taskRepository).save(task);
-        verify(taskMapper).toDto(task);
+            // Act
+            TaskDto result = taskService.updateTask(1L, updateRequest);
 
-        // Verify task was updated with values from the request
-        assertEquals(updateRequest.getTitle(), task.getTitle());
-        assertEquals(updateRequest.getDescription(), task.getDescription());
-        assertEquals(updateRequest.getStatus(), task.getStatus());
-        assertEquals(updateRequest.getDueDate(), task.getDueDate());
+            // Assert
+            assertEquals(taskDto, result);
+            verify(taskRepository).findById(1L);
+            verify(taskRepository).save(task);
+            mockedMapper.verify(() -> TaskMapper.toDto(task));
+
+            // Verify task was updated with values from the request
+            assertEquals(updateRequest.getTitle(), task.getTitle());
+            assertEquals(updateRequest.getDescription(), task.getDescription());
+            assertEquals(updateRequest.getStatus(), task.getStatus());
+            assertEquals(updateRequest.getDueDate(), task.getDueDate());
+        }
     }
 
     @Test

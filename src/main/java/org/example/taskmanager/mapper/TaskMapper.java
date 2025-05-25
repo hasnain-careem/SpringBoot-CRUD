@@ -1,16 +1,13 @@
-package org.example.taskmanager.util;
+package org.example.taskmanager.mapper;
 
+import jakarta.validation.constraints.NotNull;
 import org.example.taskmanager.dto.TaskCreateRequest;
 import org.example.taskmanager.dto.TaskDto;
 import org.example.taskmanager.model.Task;
-import org.springframework.stereotype.Component;
-import org.example.taskmanager.model.TaskStatus;
 
-@Component
-public class TaskMapperImpl implements TaskMapper {
+public class TaskMapper {
 
-    @Override
-    public TaskDto toDto(Task task) {
+    public static TaskDto toDto(@NotNull Task task) {
         TaskDto dto = new TaskDto();
         dto.setId(task.getId());
         dto.setTitle(task.getTitle());
@@ -22,8 +19,7 @@ public class TaskMapperImpl implements TaskMapper {
         return dto;
     }
 
-    @Override
-    public Task toEntity(TaskCreateRequest request) {
+    public static Task toEntity(@NotNull TaskCreateRequest request) {
         Task task = new Task();
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
