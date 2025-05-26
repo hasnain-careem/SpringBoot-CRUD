@@ -40,7 +40,7 @@ public class TaskController {
     }
 
     // Update a task
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<TaskDto> updateTask(@PathVariable Long id,
                                               @Valid @RequestBody TaskUpdateRequest request) {
         TaskDto updatedTask = taskService.updateTask(id, request);
