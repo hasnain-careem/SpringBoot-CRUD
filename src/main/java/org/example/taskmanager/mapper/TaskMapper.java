@@ -1,13 +1,16 @@
 package org.example.taskmanager.mapper;
 
-import jakarta.validation.constraints.NotNull;
 import org.example.taskmanager.dto.TaskCreateRequest;
 import org.example.taskmanager.dto.TaskDto;
 import org.example.taskmanager.model.Task;
 
 public class TaskMapper {
 
-    public static TaskDto toDto(@NotNull Task task) {
+    public static TaskDto toDto(Task task) {
+        if (task == null) {
+            throw new IllegalArgumentException("task must not be null");
+        }
+
         TaskDto dto = new TaskDto();
         dto.setId(task.getId());
         dto.setTitle(task.getTitle());
@@ -19,7 +22,11 @@ public class TaskMapper {
         return dto;
     }
 
-    public static Task toEntity(@NotNull TaskCreateRequest request) {
+    public static Task toEntity(TaskCreateRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("request must not be null");
+        }
+
         Task task = new Task();
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
