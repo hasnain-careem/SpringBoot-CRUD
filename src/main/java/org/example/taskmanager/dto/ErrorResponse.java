@@ -1,12 +1,12 @@
 package org.example.taskmanager.dto;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Map;
 
-@Data
-@NoArgsConstructor
+@Getter
+@Setter
 public class ErrorResponse {
     private int status;
     private String message;
